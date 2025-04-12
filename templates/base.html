@@ -13,12 +13,12 @@
             AI ChatBot
         </a>
     </div>
-{#    <div class="flex items-center space-x-10">#}
-{#        <a href="{% url 'bot_list' %}"#}
-{#               class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200">#}
-{#                Bots#}
-{#            </a>#}
-{#    </div>#}
+    <div class="flex items-center space-x-10">
+        <a href="{% url 'bot_list' %}"
+               class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200">
+                Bots
+            </a>
+    </div>
     <div>
         {% if user.is_authenticated %}
 
