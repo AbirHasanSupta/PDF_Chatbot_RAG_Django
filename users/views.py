@@ -14,6 +14,8 @@ def home(request):
 
 
 def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
     if request.method == "POST":
         form = CustomSignUpForm(request.POST)
         if form.is_valid():
@@ -28,6 +30,8 @@ def signup_view(request):
 
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
     if request.method == "POST":
         form = CustomLogInForm(request, data=request.POST)
         if form.is_valid():
@@ -41,6 +45,7 @@ def login_view(request):
     return render(request, 'users/login.html', {'form': form})
 
 
+@login_required(login_url='login')
 def logout_view(request):
     logout(request)
     return redirect('login')
