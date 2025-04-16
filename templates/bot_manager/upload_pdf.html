@@ -1,12 +1,27 @@
 {% extends 'base.html' %}
+{% block title %}Upload PDF{% endblock %}
+{% load static %}
+
 {% block content %}
-<h2>Upload PDF to {{ bot.name }}</h2>
+<main class="flex flex-col items-center justify-center mt-12 px-4 w-full">
+    <h1 class="text-3xl font-bold text-gray-800 mb-4">
+        Upload PDF to <span class="text-blue-600">{{ bot.name }}</span>
+    </h1>
 
-<form method="post" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Upload</button>
-</form>
+    <div class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit"
+                class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-200">
+                Upload
+            </button>
+        </form>
+    </div>
 
-<a href="{% url 'bot_list' %}">Back to Bots</a>
+    <a href="{% url 'bot_list' %}"
+       class="mt-6 text-blue-600 hover:underline text-sm font-medium">
+        ← Back to Bots
+    </a>
+</main>
 {% endblock %}
