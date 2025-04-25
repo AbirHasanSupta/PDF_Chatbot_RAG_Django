@@ -10,7 +10,7 @@
         <div class="flex justify-between mt-2">
             
             <a href="{% url 'upload_pdf' bot.id %}" class="text-green-600 hover:underline">Upload PDF</a>
-{#            <a href="{% url 'chat_with_bot' bot.id %}" class="text-blue-600 hover:underline">Chat</a>#}
+            <a href="{% url 'chat_with_bot' bot.id %}" class="text-blue-600 hover:underline">Chat</a>
             <a href="{% url 'delete_bot' bot.id %}" class="text-red-500 hover:underline"
                onclick="return confirm('Are you sure you want to delete this bot?');">Delete</a>
         </div>
