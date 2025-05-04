@@ -1,9 +1,12 @@
+import shutil
+
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
 from bot_manager.forms import PDFUploadForm
 from bot_manager.models import Bot
+from chat_manager.bot import setup_vector_store
 
 
 @require_POST
@@ -36,6 +39,14 @@ def upload_pdf(request, bot_id):
             pdf = form.save(commit=False)
             pdf.bot = bot
             pdf.save()
+
+            bot = Bot.objects.prefetch_related('pdfs').get(id=bot.id)
+
+            db_loc = f"./chroma_dbs/bot_{bot.id}"
+            shutil.rmtree(db_loc, ignore_errors=True)
+
+            setup_vector_store(bot)
+
             return redirect('bot_list')
     else:
         form = PDFUploadForm()
