@@ -1,9 +1,9 @@
 import json
 
-from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 from bot_manager.models import Bot
 from chat_manager.bot import get_rag_response
@@ -23,38 +23,38 @@ def load_chat(request, session_id):
     return JsonResponse(data, safe=False)
 
 @csrf_exempt
-@login_required
+@require_POST
 def save_message(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
+    data = json.loads(request.body)
 
-        message = data.get('message', '')
-        chat_id = data.get('chat_id')
-        bot_id = data.get('bot_id')
+    message = data.get('message', '')
+    chat_id = data.get('chat_id')
+    bot_id = data.get('bot_id')
 
-        if not chat_id:
-            session = ChatSession.objects.create(user=request.user, bot_id=bot_id)
-        else:
-            session = ChatSession.objects.get(id=chat_id)
+    if not chat_id:
+        session = ChatSession.objects.create(user=request.user, bot_id=bot_id)
+    else:
+        session = ChatSession.objects.get(id=chat_id)
 
-        ChatMessage.objects.create(
-            chat_session=session,
-            sender='user',
-            content=message
-        )
+    ChatMessage.objects.create(
+        chat_session=session,
+        sender='user',
+        content=message
+    )
 
-        bot = get_object_or_404(Bot, id=bot_id)
-        ai_response = get_rag_response(message, bot)
+    bot = get_object_or_404(Bot, id=bot_id)
+    ai_response = get_rag_response(message, bot)
 
-        ChatMessage.objects.create(
-            chat_session=session,
-            sender='ai',
-            content=ai_response
-        )
+    ChatMessage.objects.create(
+        chat_session=session,
+        sender='ai',
+        content=ai_response
+    )
 
-        return JsonResponse({
-            "chat_id": session.id,
-            "chat_title": session.created_at.strftime("Chat from %b %d, %H:%M"),
-            "ai_response": ai_response
-        })
+    return JsonResponse({
+        "chat_id": session.id,
+        "chat_title": session.created_at.strftime("Chat from %b %d, %H:%M"),
+        "ai_response": ai_response
+    })
+
 

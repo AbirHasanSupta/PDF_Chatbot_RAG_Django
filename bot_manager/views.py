@@ -1,6 +1,5 @@
 import shutil
 
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
@@ -10,7 +9,6 @@ from chat_manager.bot import setup_vector_store
 
 
 @require_POST
-@login_required(login_url='login')
 def create_bot(request):
     name = request.POST.get('bot_name')
     description = request.POST.get('bot_description', '')

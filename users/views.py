@@ -1,11 +1,9 @@
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.contrib import messages
 
 from users.forms import CustomSignUpForm, CustomLogInForm
 
-@login_required(login_url='login')
 def home(request):
     user = 'User'
     if request.user.is_authenticated:
@@ -38,6 +36,12 @@ def login_view(request):
             user = authenticate(request, username=form.cleaned_data['username'], password=form.cleaned_data['password'])
             if user:
                 login(request, user)
+
+                if request.POST.get('remember_me'):
+                    request.session.set_expiry(1209600)  # 2 weeks in seconds
+                else:
+                    request.session.set_expiry(0)
+
                 return redirect('home')
         messages.error(request, 'Invalid email or password')
     else:
@@ -45,7 +49,6 @@ def login_view(request):
     return render(request, 'users/login.html', {'form': form})
 
 
-@login_required(login_url='login')
 def logout_view(request):
     logout(request)
     return redirect('login')
