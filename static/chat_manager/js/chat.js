@@ -16,12 +16,18 @@ function loadChat(session_id) {
             data.forEach(item => {
                 const msgDiv = document.createElement("div");
                 msgDiv.classList.add('flex', 'items-start', 'space-x-2');
+                const innerDiv = document.createElement("div");
+                innerDiv.classList.add('p-3', 'rounded-lg', 'max-w-xs', 'whitespace-pre-wrap');
+
                 if (item.sender === 'user') {
                     msgDiv.classList.add('justify-end');
-                    msgDiv.innerHTML = `<div class="bg-blue-600 text-white p-3 rounded-lg max-w-xs">${item.message}</div>`;
+                    innerDiv.classList.add('bg-blue-600', 'text-white');
                 } else {
-                    msgDiv.innerHTML = `<div class="bg-gray-200 text-gray-800 p-3 rounded-lg max-w-xs">${item.message}</div>`;
+                    innerDiv.classList.add('bg-gray-200', 'text-gray-800');
                 }
+
+                innerDiv.textContent = item.message;
+                msgDiv.appendChild(innerDiv);
                 chatContainer.appendChild(msgDiv);
             });
 
@@ -32,30 +38,6 @@ function loadChat(session_id) {
             console.error("Error loading chat:", error);
             alert("Failed to load chat.");
         });
-}
-
-function appendMessage(message, sender) {
-    const chatContainer = document.getElementById('chat-container');
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('flex', 'items-start', 'space-x-2');
-
-    if (sender === 'user') {
-        messageDiv.classList.add('justify-end');
-        messageDiv.innerHTML = ` 
-            <div class="bg-blue-600 text-white p-3 rounded-lg max-w-xs">
-                ${message}
-            </div>
-        `;
-    } else {
-        messageDiv.innerHTML = ` 
-            <div class="bg-gray-200 text-gray-800 p-3 rounded-lg max-w-xs">
-                ${message}
-            </div>
-        `;
-    }
-
-    chatContainer.appendChild(messageDiv);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
 }
 
 function clearChat() {
@@ -80,16 +62,67 @@ function updateSidebar(chatId, chatTitle) {
     }
 }
 
+function simulateTyping(message, sender) {
+    const chatContainer = document.getElementById('chat-container');
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('flex', 'items-start', 'space-x-2');
+    if (sender === 'user') {
+        messageDiv.classList.add('justify-end');
+    }
+
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add(
+        sender === 'user' ? 'bg-blue-600' : 'bg-gray-200',
+        sender === 'user' ? 'text-white' : 'text-gray-800',
+        'p-3', 'rounded-lg', 'max-w-xs', 'whitespace-pre-wrap'
+    );
+    contentDiv.textContent = '';
+    messageDiv.appendChild(contentDiv);
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    let index = 0;
+    const interval = setInterval(() => {
+        if (index < message.length) {
+            contentDiv.textContent += message[index];
+            index++;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        } else {
+            clearInterval(interval);
+        }
+    }, 20);
+}
+
 let currentChatId = null;
 const botId = document.getElementById("bot-id").value;
+let isLoading = false;
 
 function submitMessage() {
-    const userInput = document.getElementById('user-input').value.trim();
-    if (userInput === '') return;
+    const userInputEl = document.getElementById('user-input');
+    const userInput = userInputEl.value.trim();
+    const sendBtn = document.querySelector('button[onclick="submitMessage()"]');
+
+    if (userInput === '' || isLoading) return;
+
+    isLoading = true;
+    userInputEl.disabled = true;
+    sendBtn.disabled = true;
+    sendBtn.innerText = 'Generating...';
 
     const chatContainer = document.getElementById('chat-container');
     chatContainer.classList.remove('hidden');
-    appendMessage(userInput, 'user');
+
+    simulateTyping(userInput, 'user');
+
+
+    const typingDiv = document.createElement('div');
+    typingDiv.classList.add('flex', 'items-start', 'space-x-2');
+    const typingContent = document.createElement('div');
+    typingContent.classList.add('bg-gray-300', 'text-gray-800', 'p-3', 'rounded-lg', 'max-w-xs');
+    typingContent.textContent = 'Typing...';
+    typingDiv.appendChild(typingContent);
+    chatContainer.appendChild(typingDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
 
     fetch('/chats/api/save-message/', {
         method: 'POST',
@@ -106,10 +139,22 @@ function submitMessage() {
     .then(res => res.json())
     .then(data => {
         currentChatId = data.chat_id;
-        appendMessage(data.ai_response, 'ai');
-        updateSidebar(data.chat_id, data.chat_title);
-    });
 
-    document.getElementById('user-input').value = '';
-    adjustHeight(document.getElementById('user-input'));
+        chatContainer.removeChild(typingDiv);
+
+        simulateTyping(data.ai_response, 'ai');
+        updateSidebar(data.chat_id, data.chat_title);
+    })
+    .catch(err => {
+        console.error("Error saving message:", err);
+        typingContent.textContent = "Error generating response.";
+    })
+    .finally(() => {
+        userInputEl.disabled = false;
+        sendBtn.disabled = false;
+        sendBtn.innerText = 'Send';
+        userInputEl.value = '';
+        adjustHeight(userInputEl);
+        isLoading = false;
+    });
 }

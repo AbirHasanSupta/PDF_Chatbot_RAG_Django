@@ -1,3 +1,4 @@
+import os
 import shutil
 
 from django.shortcuts import render, redirect, get_object_or_404
@@ -24,6 +25,14 @@ def bot_list(request):
 
 def delete_bot(request, bot_id):
     bot = get_object_or_404(Bot, id=bot_id, user=request.user)
+
+    for pdf in bot.pdfs.all():
+        if pdf.file and os.path.isfile(pdf.file.path):
+            os.remove(pdf.file.path)
+
+    db_loc = f"./chroma_dbs/bot_{bot.id}"
+    shutil.rmtree(db_loc, ignore_errors=True)
+
     bot.delete()
     return redirect('bot_list')
 
