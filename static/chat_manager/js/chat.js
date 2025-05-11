@@ -158,3 +158,18 @@ function submitMessage() {
         isLoading = false;
     });
 }
+
+function handleKeyDown(event) {
+    if (event.key === 'Enter') {
+        if (!event.shiftKey) {
+            event.preventDefault();
+            submitMessage();
+        }
+        else {
+            return true;
+        }
+    }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('user-input').addEventListener('keydown', handleKeyDown);
+});
