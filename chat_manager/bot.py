@@ -26,37 +26,33 @@ def setup_vector_store(bot):
 
     is_new = not os.listdir(db_loc)
 
-    if is_new:
-        docs, ids = [], []
-
-        pdfs = bot.pdfs.all()
-
+    pdf = bot.pdf
+    if pdf:
+        pdf_path = pdf.file.path
+        text = extract_text_from_pdf(pdf_path)
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=800,
             chunk_overlap=100,
             separators=["\n\n", "\n", ".", " ", ""]
         )
-
-        for pdf_obj in pdfs:
-            pdf_path = pdf_obj.file.path
-            text = extract_text_from_pdf(pdf_path)
-
-            chunks = text_splitter.split_text(text)
-
-            for chunk in chunks:
-                doc = Document(
-                    page_content=chunk,
-                    metadata={"source": pdf_obj.file.name}
-                )
-                docs.append(doc)
-                ids.append(str(uuid.uuid4()))
+        chunks = text_splitter.split_text(text)
+        docs, ids = [], []
+        for chunk in chunks:
+            doc = Document(
+                page_content=chunk,
+                metadata={"source": pdf.file.name}
+            )
+            docs.append(doc)
+            ids.append(str(uuid.uuid4()))
 
         vector_store = Chroma(
             collection_name=f"bot_{bot.id}_docs",
             persist_directory=db_loc,
             embedding_function=embeds
         )
-        vector_store.add_documents(documents=docs, ids=ids)
+
+        if is_new:
+            vector_store.add_documents(documents=docs, ids=ids)
 
     else:
         vector_store = Chroma(

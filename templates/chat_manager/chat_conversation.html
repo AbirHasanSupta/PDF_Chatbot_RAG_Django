@@ -6,9 +6,12 @@
 {% block content %}
 <main class="flex flex-col items-center justify-center mt-12 text-center w-full px-4">
     
-    <h1 class="text-xl text-gray-700 mb-6">
-        Welcome To AI ChatBot
+    <h1 class="text-xl text-black-700 mb-6">
+        {{ bot.name }}
     </h1>
+    <h2 class="text-l text-gray-600 mb-6">
+        {{ bot.description }}
+    </h2>
 
     <div class="flex w-full max-w-5xl gap-4">
     {% if user.is_authenticated %}

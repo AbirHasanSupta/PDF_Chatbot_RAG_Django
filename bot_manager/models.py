@@ -13,7 +13,7 @@ class Bot(models.Model):
 
 
 class PDFDocument(models.Model):
-    bot = models.ForeignKey(Bot, on_delete=models.CASCADE, related_name='pdfs')
+    bot = models.OneToOneField(Bot, on_delete=models.CASCADE, related_name='pdf')
     file = models.FileField(upload_to='pdfs/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 

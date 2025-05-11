@@ -26,9 +26,9 @@ def bot_list(request):
 def delete_bot(request, bot_id):
     bot = get_object_or_404(Bot, id=bot_id, user=request.user)
 
-    for pdf in bot.pdfs.all():
-        if pdf.file and os.path.isfile(pdf.file.path):
-            os.remove(pdf.file.path)
+    if hasattr(bot, 'pdf') and bot.pdf:
+        if bot.pdf.file and os.path.isfile(bot.pdf.file.path):
+            os.remove(bot.pdf.file.path)
 
     db_loc = f"./chroma_dbs/bot_{bot.id}"
     shutil.rmtree(db_loc, ignore_errors=True)
@@ -44,10 +44,11 @@ def upload_pdf(request, bot_id):
         form = PDFUploadForm(request.POST, request.FILES)
         if form.is_valid():
             pdf = form.save(commit=False)
+
+            if hasattr(bot, 'pdf'):
+                bot.pdf.delete()
             pdf.bot = bot
             pdf.save()
-
-            bot = Bot.objects.prefetch_related('pdfs').get(id=bot.id)
 
             db_loc = f"./chroma_dbs/bot_{bot.id}"
             shutil.rmtree(db_loc, ignore_errors=True)
