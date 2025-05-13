@@ -1,9 +1,9 @@
 import json
 
 from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 
 from bot_manager.models import Bot
 from chat_manager.bot import get_rag_response
@@ -53,8 +53,22 @@ def save_message(request):
 
     return JsonResponse({
         "chat_id": session.id,
-        "chat_title": session.created_at.strftime("Chat from %b %d, %H:%M"),
+        "chat_title": session.created_at.strftime("Chat from %b %d, %H:%M") if not session.title else session.title,
         "ai_response": ai_response
     })
 
+@require_POST
+def rename_chat(request, session_id, bot_id):
+    chat_session = ChatSession.objects.get(id=session_id)
+    new_title = request.POST.get('title', '')
+    if new_title:
+        chat_session.title = new_title
+        chat_session.save()
+    return redirect(f'/chats/chat/{bot_id}/')
 
+
+@require_http_methods(["DELETE"])
+@csrf_exempt
+def delete_chat(request, session_id):
+    ChatSession.objects.filter(id=session_id, user=request.user).delete()
+    return JsonResponse({'status': 'deleted'})

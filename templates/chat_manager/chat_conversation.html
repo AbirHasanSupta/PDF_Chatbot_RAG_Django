@@ -1,60 +1,97 @@
-
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}Chat{% endblock %}
 
 {% block content %}
-<main class="flex flex-col items-center justify-center mt-12 text-center w-full px-4">
-    
-    <h1 class="text-xl text-black-700 font-bold mb-1">
-        {{ bot.name }}
-    </h1>
-    <h2 class="text-l text-gray-600 mb-4">
-        {{ bot.description }}
-    </h2>
+    <main class="flex flex-col items-center justify-center mt-12 text-center w-full px-4">
 
-    <div class="flex w-full max-w-5xl gap-4">
-    {% if user.is_authenticated %}
-        <div class="w-1/4 bg-white rounded-lg shadow-md p-4 h-[500px] overflow-y-auto">
-            <h3 class="text-lg font-semibold mb-3 text-gray-800">Chat History</h3>
-            <div id="chat-history">
-                {% for session in chat_sessions %}
-                    <button onclick="loadChat({{ session.id }})" class="text-left w-full py-2 px-4 hover:bg-gray-100 rounded">
-                        Chat from {{ session.created_at|date:"M d, H:i" }}
+        <h1 class="text-xl text-black-700 font-bold mb-1">
+            {{ bot.name }}
+        </h1>
+        <h2 class="text-l text-gray-600 mb-4">
+            {{ bot.description }}
+        </h2>
+
+        <div class="flex w-full max-w-5xl gap-4">
+            {% if user.is_authenticated %}
+                <div class="w-1/4 bg-white rounded-lg shadow-md p-4 h-[500px] overflow-y-auto">
+                    <h3 class="text-lg font-semibold mb-3 text-gray-800">Chat History</h3>
+                    <button onclick="startNewChat()"
+                            class="w-full mb-3 bg-green-500 text-white font-semibold py-2 rounded hover:bg-green-600">
+                        New Chat
                     </button>
-                {% endfor %}
-            </div>
-        </div>
-    {% endif %}
+                    <div id="chat-history">
+                        {% for session in chat_sessions %}
+                            <div class="relative flex items-center justify-between px-2 py-2 hover:bg-gray-100 rounded"
+                                 id="chat-session-{{ session.id }}">
 
-        <div class="w-3/4">
-            <div id="chat-container" class="bg-white p-4 rounded-lg shadow-md h-[400px] overflow-y-auto flex flex-col space-y-4 hidden">
-            </div>
+                                <div class="flex-1 cursor-pointer text-left"
+                                     onclick="loadChat({{ session.id }})"
+                                     data-id="{{ session.id }}"
+                                     id="chat-click-{{ session.id }}">
+                                    <span id="chat-title-{{ session.id }}" class="truncate">
+                                        {% if not session.title %}
+                                            Chat from {{ session.created_at|date:"M d, H:i" }}
+                                        {% else %}
+                                            {{ session.title }}
+                                        {% endif %}
+                                    </span>
+                                </div>
 
-            <div class="bg-white p-4 rounded-lg shadow-md mt-4">
-                <input type="hidden" id="bot-id" value="{{ bot.id }}">
+                                <div class="relative ml-2" id="settings-wrapper-{{ session.id }}">
+                                    <button onclick="toggleMenu(event, {{ session.id }})"
+                                            class="text-gray-500 hover:text-gray-800">
+                                        &#8942;
+                                    </button>
+                                
+                                    <div id="menu-{{ session.id }}"
+                                         class="absolute right-0 top-6 bg-white border shadow-md rounded hidden z-10 w-32">
+                                        <button onclick="startRename({{ session.id }})"
+                                                class="block w-full text-left px-4 py-2 hover:bg-gray-100">
+                                            Rename
+                                        </button>
+                                        <button onclick="confirmDelete({{ session.id }})"
+                                                class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
 
-                <textarea
-                    id="user-input"
-                    class="w-full p-4 border border-gray-300 rounded-md resize-none"
-                    rows="3"
-                    placeholder="Start typing to see actions..."
-                    oninput="adjustHeight(this)">
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="w-3/4">
+                <div id="chat-container"
+                     class="bg-white p-4 rounded-lg shadow-md h-[400px] overflow-y-auto flex flex-col space-y-4 hidden">
+                </div>
+
+                <div class="bg-white p-4 rounded-lg shadow-md mt-4">
+                    <input type="hidden" id="bot-id" value="{{ bot.id }}">
+
+                    <textarea
+                            id="user-input"
+                            class="w-full p-4 border border-gray-300 rounded-md resize-none"
+                            rows="3"
+                            placeholder="Start typing to see actions..."
+                            oninput="adjustHeight(this)">
                 </textarea>
-                <button
-                    onclick="submitMessage()"
-                    class="w-full mt-4 bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-200">
-                    Send
-                </button>
-                <button
-                    onclick="clearChat()"
-                    class="w-full mt-2 bg-gray-500 text-white font-semibold py-2 rounded-md hover:bg-gray-600 transition duration-200">
-                    Clear Chat
-                </button>
+                    <button
+                            onclick="submitMessage()"
+                            class="w-full mt-4 bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-200">
+                        Send
+                    </button>
+                    <button
+                            onclick="clearChat()"
+                            class="w-full mt-2 bg-gray-500 text-white font-semibold py-2 rounded-md hover:bg-gray-600 transition duration-200">
+                        Clear Chat
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-</main>
+    </main>
 
-<script src="{% static 'chat_manager/js/chat.js' %}"></script>
+    <script src="{% static 'chat_manager/js/chat.js' %}"></script>
 {% endblock %}

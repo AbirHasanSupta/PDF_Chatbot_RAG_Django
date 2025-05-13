@@ -6,7 +6,7 @@ from bot_manager.models import Bot
 
 class ChatSession(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=255, default='New Chat')
+    title = models.CharField(max_length=255, default='')
     created_at = models.DateTimeField(auto_now_add=True)
     bot = models.ForeignKey(Bot, on_delete=models.CASCADE)
 
