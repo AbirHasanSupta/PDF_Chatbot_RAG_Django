@@ -1,43 +1,72 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2 class="text-2xl font-bold mb-4">My Bots</h2>
-
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    {% for bot in bots %}
-    <div class="bg-white p-4 shadow rounded relative">
-        <h2 class="text-xl font-bold">{{ bot.name }}</h2>
-        <p class="text-sm text-gray-500 mb-2">{{ bot.description }}</p>
+<div class="max-w-7xl mx-auto px-4">
+    <div class="flex flex-col lg:flex-row gap-8 items-start">
         
-        <div class="flex justify-between mt-2">
-            {% if not bot.pdf %}
-                <a href="{% url 'upload_pdf' bot.id %}" class="text-green-600 hover:underline">Upload PDF</a>
-            {% endif %}
-            
-            {% if bot.pdf %}
-                <a href="{% url 'chat_with_bot' bot.id %}" class="absolute top-2 right-4 inline-block px-6 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
-                    Chat
-                </a>
-            {% endif %}
-            
-            <a href="{% url 'delete_bot' bot.id %}" class="text-red-500 hover:underline"
-               onclick="return confirm('Are you sure you want to delete this bot?');">Delete</a>
+        <div class="flex-1">
+            <h2 class="text-3xl font-extrabold text-gray-800 mb-6 border-b pb-2">🤖 My Bots</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 justify-items-center">
+                {% for bot in bots %}
+                <div class="relative bg-white border border-gray-200 rounded-2xl shadow-md p-6 transition-transform transform hover:scale-105 hover:shadow-lg max-w-sm w-full">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <div class="bg-blue-100 p-3 rounded-full">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M12 14a4 4 0 100-8 4 4 0 000 8zM4 20h16M4 20a8 8 0 0116 0"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-semibold text-gray-800 break-words">{{ bot.name }}</h2>
+                            <p class="text-sm text-gray-500 break-words">{{ bot.description|default:"No description provided." }}</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-6">
+                        {% if not bot.pdf %}
+                            <form method="get" action="{% url 'upload_pdf' bot.id %}">
+                                <button type="submit" 
+                                        class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition">
+                                    Upload PDF
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        <div class="flex items-center space-x-4">
+                            {% if bot.pdf %}
+                            <a href="{% url 'chat_with_bot' bot.id %}"
+                               class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                Chat
+                            </a>
+                            {% endif %}
+                            <form method="post" action="{% url 'delete_bot' bot.id %}" onsubmit="return confirm('Are you sure you want to delete this bot?');">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="w-[24rem] mt-[1.25rem] sticky top-6">
+            <div class="bg-white p-6 shadow-md rounded-xl border">
+                <h3 class="text-xl font-semibold mb-4 text-center text-gray-800">➕ Create a New Bot</h3>
+                <form method="post" action="{% url 'create_bot' %}" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="text" name="bot_name" placeholder="Bot name"
+                           class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    <input type="text" name="bot_description" placeholder="Bot description"
+                           class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <button type="submit"
+                            class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200">
+                        Create Bot
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
-    {% endfor %}
-</div>
-
-<div class="bg-white p-6 shadow-md rounded max-w-md mx-auto">
-    <h3 class="text-xl font-semibold mb-4">Create a New Bot</h3>
-    <form method="post" action="{% url 'create_bot' %}" class="space-y-4">
-        {% csrf_token %}
-        <input type="text" name="bot_name" placeholder="Enter bot name"
-               class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" required />
-        <input type="text" name="bot_description" placeholder="Enter bot Description"
-               class="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <button type="submit"
-                class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition duration-200">
-            Create Bot
-        </button>
-    </form>
 </div>
 {% endblock %}

@@ -2,20 +2,34 @@
 {% load static %}
 
 {% block content %}
-<div class="flex items-center justify-center min-h-screen bg-gray-100 px-4">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
-        <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Create an Account</h2>
+<div class="min-h-[calc(100vh-80px)] flex items-center justify-center bg-gray-100 px-4 py-6">
+    <div class="w-full max-w-5xl bg-white shadow-xl rounded-xl overflow-hidden flex flex-col md:flex-row">
 
-        <form method="POST" class="space-y-4">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-200">Sign Up</button>
-        </form>
+        <div class="md:w-1/2 bg-gradient-to-br from-blue-700 to-blue-500 text-white flex flex-col items-center justify-center p-10 space-y-4">
+            <h1 class="text-4xl font-bold">Join ChatBot Hub</h1>
+            <p class="text-lg text-center text-blue-100">
+                Create intelligent, personalized AI chat assistants using your own documents and data.
+            </p>
+        </div>
 
-        <p class="text-center text-sm text-gray-700 mt-4">
-            Already have an account?
-            <a href="{% url 'login' %}" class="text-blue-600 hover:underline">Log in</a>
-        </p>
+        <div class="md:w-1/2 p-10">
+            <h2 class="text-3xl font-semibold text-center text-gray-800 mb-6">Create an Account</h2>
+
+            <form method="POST" class="space-y-5">
+                {% csrf_token %}
+                {{ form.as_p }}
+
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-200 shadow">
+                    Sign Up
+                </button>
+            </form>
+
+            <p class="text-center text-sm text-gray-600 mt-6">
+                Already have an account?
+                <a href="{% url 'login' %}" class="text-blue-600 hover:underline font-medium">Log in</a>
+            </p>
+        </div>
     </div>
 </div>
 {% endblock %}

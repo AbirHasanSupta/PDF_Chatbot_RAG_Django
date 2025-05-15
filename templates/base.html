@@ -1,41 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <title>{% block title %}RAG System{% endblock %}</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>{% block title %}AI ChatBot Hub{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen font-sans text-gray-900">
 
-<nav class="bg-white shadow-md px-6 py-4 flex items-center justify-between">
-    <div class="flex items-center space-x-6">
-        <a href="{% url 'home' %}" class="text-xl font-bold text-blue-600 hover:underline">
-            AI ChatBot
-        </a>
-    </div>
-    <div class="flex items-center space-x-10">
-        <a href="{% url 'bot_list' %}"
-               class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200">
-                Bots
-            </a>
-    </div>
-    <div>
-        {% if user.is_authenticated %}
+<nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
 
-            <a href="{% url 'logout' %}"
-               class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition duration-200">
-                Logout
+            <a href="{% url 'home' %}"
+               class="text-2xl font-extrabold text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded">
+                AI ChatBot
             </a>
-        {% else %}
-            <a href="{% url 'login' %}"
-               class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-200">
-                Login
-            </a>
-        {% endif %}
+
+            <div class="flex items-center space-x-6">
+
+
+                {% if user.is_authenticated %}
+                    <a href="{% url 'bot_list' %}"
+                       class="px-4 py-2 font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition">
+                        Bots
+                    </a>
+                    <a href="{% url 'logout' %}"
+                       class="px-4 py-2 font-semibold rounded-md bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 transition">
+                        Logout
+                    </a>
+                {% else %}
+                    <a href="{% url 'login' %}"
+                       class="px-4 py-2 font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+                        Login
+                    </a>
+                {% endif %}
+            </div>
+
+        </div>
     </div>
 </nav>
-    <div class="px-4 py-6">
-        {% block content %}{% endblock %}
-    </div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% block content %}{% endblock %}
+</div>
+
 </body>
 </html>
