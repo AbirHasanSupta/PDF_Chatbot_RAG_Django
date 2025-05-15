@@ -1,97 +1,162 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Chat{% endblock %}
+{% block title %}Chat with {{ bot.name }}{% endblock %}
 
 {% block content %}
-    <main class="flex flex-col items-center justify-center mt-12 text-center w-full px-4">
-
-        <h1 class="text-xl text-black-700 font-bold mb-1">
-            {{ bot.name }}
-        </h1>
-        <h2 class="text-l text-gray-600 mb-4">
-            {{ bot.description }}
-        </h2>
-
-        <div class="flex w-full max-w-5xl gap-4">
-            {% if user.is_authenticated %}
-                <div class="w-1/4 bg-white rounded-lg shadow-md p-4 h-[500px] overflow-y-auto">
-                    <h3 class="text-lg font-semibold mb-3 text-gray-800">Chat History</h3>
-                    <button onclick="startNewChat()"
-                            class="w-full mb-3 bg-green-500 text-white font-semibold py-2 rounded hover:bg-green-600">
-                        New Chat
-                    </button>
-                    <div id="chat-history">
-                        {% for session in chat_sessions %}
-                            <div class="relative flex items-center justify-between px-2 py-2 hover:bg-gray-100 rounded"
-                                 id="chat-session-{{ session.id }}">
-
-                                <div class="flex-1 cursor-pointer text-left"
-                                     onclick="loadChat({{ session.id }})"
-                                     data-id="{{ session.id }}"
-                                     id="chat-click-{{ session.id }}">
-                                    <span id="chat-title-{{ session.id }}" class="truncate">
-                                        {% if not session.title %}
-                                            Chat from {{ session.created_at|date:"M d, H:i" }}
-                                        {% else %}
-                                            {{ session.title }}
-                                        {% endif %}
-                                    </span>
-                                </div>
-
-                                <div class="relative ml-2" id="settings-wrapper-{{ session.id }}">
-                                    <button onclick="toggleMenu(event, {{ session.id }})"
-                                            class="text-gray-500 hover:text-gray-800">
-                                        &#8942;
-                                    </button>
-                                
-                                    <div id="menu-{{ session.id }}"
-                                         class="absolute right-0 top-6 bg-white border shadow-md rounded hidden z-10 w-32">
-                                        <button onclick="startRename({{ session.id }})"
-                                                class="block w-full text-left px-4 py-2 hover:bg-gray-100">
-                                            Rename
-                                        </button>
-                                        <button onclick="confirmDelete({{ session.id }})"
-                                                class="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600">
-                                            Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-
-                    </div>
+<div class="max-w-7xl mx-auto px-4">
+    <div class="flex flex-col lg:flex-row gap-8 items-start">
+        <div class="flex-1">
+            <div class="flex items-center justify-between mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-3 text-primary-600 dark:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                    </svg>
+                    {{ bot.name }}
+                </h2>
+                
+                <div class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ bot.description }}
                 </div>
-            {% endif %}
+            </div>
 
-            <div class="w-3/4">
-                <div id="chat-container"
-                     class="bg-white p-4 rounded-lg shadow-md h-[400px] overflow-y-auto flex flex-col space-y-4 hidden">
-                </div>
+            <div id="chat-container" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 mb-4 h-[500px] overflow-y-auto flex flex-col space-y-4 hidden">
+            </div>
 
-                <div class="bg-white p-4 rounded-lg shadow-md mt-4">
-                    <input type="hidden" id="bot-id" value="{{ bot.id }}">
-
-                    <textarea
-                            id="user-input"
-                            class="w-full p-4 border border-gray-300 rounded-md resize-none"
-                            rows="3"
-                            placeholder="Start typing to see actions..."
-                            oninput="adjustHeight(this)">
-                </textarea>
-                    <button
-                            onclick="submitMessage()"
-                            class="w-full mt-4 bg-blue-600 text-white font-semibold py-2 rounded-md hover:bg-blue-700 transition duration-200">
-                        Send
+            <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6">
+                <input type="hidden" id="bot-id" value="{{ bot.id }}">
+                
+                <textarea id="user-input" 
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors duration-200 resize-none" 
+                        rows="3" 
+                        placeholder="Type your message here..."
+                        oninput="adjustHeight(this)"></textarea>
+                
+                <div class="flex gap-3 mt-4">
+                    <button onclick="submitMessage()" 
+                            class="flex-1 flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 shadow-sm transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
+                        Send Message
                     </button>
-                    <button
-                            onclick="clearChat()"
-                            class="w-full mt-2 bg-gray-500 text-white font-semibold py-2 rounded-md hover:bg-gray-600 transition duration-200">
+                    
+                    <button onclick="clearChat()" 
+                            class="flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 dark:focus:ring-offset-gray-900 shadow-sm transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
                         Clear Chat
                     </button>
                 </div>
             </div>
         </div>
-    </main>
 
-    <script src="{% static 'chat_manager/js/chat.js' %}"></script>
+        <!-- Chat history sidebar -->
+        {% if user.is_authenticated %}
+        <div class="w-full lg:w-80 lg:flex-shrink-0 sticky top-[5.5rem]">
+            <div class="bg-white dark:bg-gray-800 p-6 shadow-md rounded-xl border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+                <div class="flex items-center justify-center mb-4">
+                    <div class="bg-primary-100 dark:bg-primary-900 p-3 rounded-full text-primary-600 dark:text-primary-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                    </div>
+                </div>
+                
+                <h3 class="text-xl font-semibold mb-4 text-center text-gray-800 dark:text-gray-100">Chat History</h3>
+                
+                <button onclick="startNewChat()" 
+                        class="w-full flex items-center justify-center px-4 py-2 mb-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 dark:focus:ring-offset-gray-900 shadow-sm transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    New Chat
+                </button>
+                
+                <div id="chat-history" class="space-y-2 max-h-[400px] overflow-y-auto">
+                    {% for session in chat_sessions %}
+                    <div class="relative flex items-center justify-between px-3 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200 {% if forloop.first %}bg-blue-50 dark:bg-blue-900/20 border-l-4 border-primary-500{% endif %}"
+                         id="chat-session-{{ session.id }}">
+                         
+                        <div class="flex-1 cursor-pointer text-left truncate"
+                             onclick="loadChat({{ session.id }})"
+                             data-id="{{ session.id }}"
+                             id="chat-click-{{ session.id }}">
+                            <span id="chat-title-{{ session.id }}" class="truncate text-gray-800 dark:text-gray-200">
+                                {% if not session.title %}
+                                    Chat from {{ session.created_at|date:"M d, H:i" }}
+                                {% else %}
+                                    {{ session.title }}
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="relative ml-2" id="settings-wrapper-{{ session.id }}">
+                            <button onclick="toggleMenu(event, {{ session.id }})"
+                                    class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 p-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                                </svg>
+                            </button>
+                        
+                            <div id="menu-{{ session.id }}"
+                                 class="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-md rounded-lg hidden z-10 w-32 overflow-hidden">
+                                <button onclick="startRename({{ session.id }})"
+                                        class="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors duration-200">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        Rename
+                                    </div>
+                                </button>
+                                <button onclick="confirmDelete({{ session.id }})"
+                                        class="block w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors duration-200">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                        Delete
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if not chat_sessions %}
+                    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-3 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                        <p>No chat history yet</p>
+                        <p class="text-sm mt-1">Start a new conversation</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tips</h4>
+                    <ul class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
+                        <li class="flex items-start">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Press Enter to send your message</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>Shift+Enter for new line</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="{% static 'chat_manager/js/chat.js' %}"></script>
 {% endblock %}
