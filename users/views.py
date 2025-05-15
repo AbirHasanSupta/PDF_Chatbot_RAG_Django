@@ -43,7 +43,6 @@ def login_view(request):
                     request.session.set_expiry(0)
 
                 return redirect('home')
-        messages.error(request, 'Invalid email or password')
     else:
         form = CustomLogInForm()
     return render(request, 'users/login.html', {'form': form})

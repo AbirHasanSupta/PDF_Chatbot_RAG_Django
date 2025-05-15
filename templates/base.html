@@ -1,4 +1,4 @@
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth dark">
 <head>
@@ -153,29 +153,49 @@
 </nav>
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
- {% block content %}{% endblock %}
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} bg-{{ message.tags|default:'info' }}-100 border-l-4 border-{{ message.tags|default:'info' }}-500 text-{{ message.tags|default:'info' }}-700 dark:bg-{{ message.tags|default:'info' }}-900 dark:text-{{ message.tags|default:'info' }}-300 p-4 mb-4 transition-opacity duration-500 opacity-100" role="alert" data-auto-dismiss>
+            <div class="flex">
+                <div class="py-1">
+                    {% if message.tags == 'success' %}
+                    <svg class="h-6 w-6 text-green-500 mr-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {% elif message.tags == 'error' %}
+                    <svg class="h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {% elif message.tags == 'warning' %}
+                    <svg class="h-6 w-6 text-yellow-500 mr-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    {% else %}
+                    <svg class="h-6 w-6 text-blue-500 mr-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {% endif %}
+                </div>
+                <div>
+                    <p class="font-medium">{{ message }}</p>
+                </div>
+                <div class="ml-auto">
+                    <button type="button" class="inline-flex text-gray-400 hover:text-gray-500 focus:outline-none" onclick="dismissMessage(this)">
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+    {% block content %}{% endblock %}
 </div>
 
-<script>
-    document.getElementById('theme-toggle').addEventListener('click', function() {
-        document.documentElement.classList.toggle('dark');
-        
-        if (document.documentElement.classList.contains('dark')) {
-            localStorage.setItem('theme', 'dark');
-        } else {
-            localStorage.setItem('theme', 'light');
-        }
-    });
-    
-    if (localStorage.getItem('theme') === 'light') {
-        document.documentElement.classList.remove('dark');
-    }
-    
-    document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
-        const mobileMenu = document.getElementById('mobile-menu');
-        mobileMenu.classList.toggle('hidden');
-    });
-</script>
+<script src="{% static 'js/base.js' %}"> </script>
 
 </body>
 </html>
