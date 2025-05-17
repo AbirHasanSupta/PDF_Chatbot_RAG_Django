@@ -250,8 +250,8 @@ function showNotification(message, type = 'info') {
 
     setTimeout(() => {
         notification.style.opacity = '0';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
+        setTimeout(() => notification.remove(), 500);
+    }, 2000);
 }
 
 function escapeHtml(unsafe) {
