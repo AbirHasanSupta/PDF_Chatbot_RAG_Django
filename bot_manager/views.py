@@ -2,6 +2,7 @@ import os
 import shutil
 
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 
@@ -33,7 +34,8 @@ def edit_bot(request, bot_id):
         bot.description = request.POST.get('description')
         bot.save()
 
-        messages.success(request, f"'{bot.name}' has been updated successfully!")
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
 
         return redirect('bot_list')
 
@@ -71,7 +73,8 @@ def upload_pdf(request, bot_id):
             shutil.rmtree(db_loc, ignore_errors=True)
 
             setup_vector_store(bot)
-            messages.success(request, f"PDF for '{bot.name}' has been uploaded successfully!")
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True})
             return redirect('bot_list')
     else:
         form = PDFUploadForm()
