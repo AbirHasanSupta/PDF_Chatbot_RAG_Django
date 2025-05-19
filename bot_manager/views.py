@@ -52,7 +52,9 @@ def delete_bot(request, bot_id):
     shutil.rmtree(db_loc, ignore_errors=True)
 
     bot.delete()
-    messages.success(request, f"'{bot.name}' has been deleted successfully!")
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': True})
+
     return redirect('bot_list')
 
 

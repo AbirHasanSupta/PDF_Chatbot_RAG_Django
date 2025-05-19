@@ -3,6 +3,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeModals();
     initializeFormHandling();
     initializeFileUpload();
+    initializeDeleteFunctionality();
+
 });
 
 function initializeFilterFunctionality() {
@@ -91,7 +93,7 @@ function initializeFormHandling() {
 
             const formData = new FormData(this);
             const actionUrl = this.action;
-            const botId = actionUrl.split('/')[2];
+            const botId = actionUrl.split('/')[4];
 
             submitFormAsync(actionUrl, formData, (data) => {
                 if (data.success) {
@@ -253,6 +255,52 @@ function showNotification(message, type = 'info') {
         setTimeout(() => notification.remove(), 500);
     }, 2000);
 }
+
+
+function initializeDeleteFunctionality() {
+    const deleteForms = document.querySelectorAll('form[action*="/delete/"]');
+
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            deleteBot(this);
+        });
+    });
+}
+
+function deleteBot(form) {
+    const url = form.action;
+    const formData = new FormData(form);
+
+    fetch(url, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const botCard = form.closest('[data-bot-id]');
+            if (botCard) {
+                botCard.remove();
+                showNotification('Bot deleted successfully!', 'success');
+
+                const botCards = document.querySelectorAll('.grid > div[class*="group"]');
+                updateEmptyState(botCards);
+            }
+        } else {
+            showNotification(data.error || 'Error deleting bot', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while deleting the bot.', 'error');
+    });
+}
+
+
 
 function escapeHtml(unsafe) {
     if (!unsafe) return '';
