@@ -16,8 +16,14 @@ def create_bot(request):
     name = request.POST.get('bot_name')
     description = request.POST.get('bot_description', '')
     if name:
-        Bot.objects.create(user=request.user, name=name, description=description)
-        messages.success(request, f"'{name}' has been created successfully!")
+        new_bot = Bot.objects.create(user=request.user, name=name, description=description)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'data':{
+                'id': new_bot.id,
+                'name': new_bot.name,
+                'description': new_bot.description
+            }})
+
     return redirect('bot_list')
     
 
