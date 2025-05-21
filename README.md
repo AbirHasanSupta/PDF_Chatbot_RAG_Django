@@ -1,6 +1,6 @@
-# RAG\_WEB\_DJANGO
+# PDF\_Chatbot\_RAG\_Django
 
-RAG\_WEB\_DJANGO is a Django-based web application that allows users to upload PDFs and interact with a chatbot that provides answers grounded only in the uploaded document's content. The system uses **Retrieval-Augmented Generation (RAG)** with **LangChain**, **Chroma** for vector storage, and **Ollama** to run local LLMs and embedding models.
+PDF\_Chatbot\_RAG\_Django is a Django-based web application that allows users to upload PDFs and interact with a chatbot that provides answers grounded only in the uploaded document's content. The system uses **Retrieval-Augmented Generation (RAG)** with **LangChain**, **Chroma** for vector storage, and **Ollama** to run local LLMs and embedding models.
 
 Each bot created in the system has its own isolated vector store, ensuring that document data is not shared across bots.
 
