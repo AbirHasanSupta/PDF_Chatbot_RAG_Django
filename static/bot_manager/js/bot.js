@@ -5,8 +5,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeFileUpload();
     initializeDeleteFunctionality();
     initializeCreateBotFunctionality();
+    initializeEditButtonHandlers();
+    initializeUploadButtonHandlers();
 });
-
 
 function initializeFilterFunctionality() {
     const filterInput = document.getElementById('filter-bots');
@@ -33,7 +34,6 @@ function filterBots() {
 
     updateEmptyState(botCards);
 }
-
 
 function updateEmptyState(botCards) {
     const visibleCards = [...botCards].filter(card => card.style.display !== 'none');
@@ -76,6 +76,7 @@ function initializeModals() {
         const modal = document.getElementById('uploadPdfModal');
         if (!modal) return;
 
+        document.getElementById('uploadPdfForm').action = `/bots/${botId}/upload_pdf/`;
         document.getElementById('uploadPdfForm').setAttribute('data-bot-id', botId);
         document.getElementById('uploadBotName').textContent = botName;
         document.getElementById('pdfFile').value = '';
@@ -87,6 +88,35 @@ function initializeModals() {
         const modal = document.getElementById('uploadPdfModal');
         if (modal) modal.classList.add('hidden');
     };
+}
+
+function initializeEditButtonHandlers() {
+    document.addEventListener('click', function(e) {
+        const editButton = e.target.closest('.edit-bot-btn');
+        if (editButton) {
+            const botId = editButton.getAttribute('data-bot-id');
+            const botName = editButton.getAttribute('data-bot-name');
+            const botDescription = editButton.getAttribute('data-bot-description');
+
+            if (botId && botName) {
+                openEditModal(botId, botName, botDescription || '');
+            }
+        }
+    });
+}
+
+function initializeUploadButtonHandlers() {
+    document.addEventListener('click', function(e) {
+        const uploadButton = e.target.closest('.upload-pdf-btn');
+        if (uploadButton) {
+            const botId = uploadButton.getAttribute('data-bot-id');
+            const botName = uploadButton.getAttribute('data-bot-name');
+
+            if (botId && botName) {
+                openUploadModal(botId, botName);
+            }
+        }
+    });
 }
 
 function initializeFormHandling() {
@@ -134,7 +164,7 @@ function initializeFileUpload() {
 
         const formData = new FormData(this);
         const botId = this.getAttribute('data-bot-id');
-        const actionUrl = `/bots/${botId}/upload_pdf/`;
+        const actionUrl = this.action || `/bots/${botId}/upload_pdf/`;
 
         const submitBtn = this.querySelector('button[type="submit"]');
         if (submitBtn) {
@@ -167,11 +197,17 @@ function initializeFileUpload() {
 }
 
 function submitFormAsync(url, formData, callback) {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (csrfToken && !formData.has('csrfmiddlewaretoken')) {
+        formData.append('csrfmiddlewaretoken', csrfToken);
+    }
+
     fetch(url, {
         method: 'POST',
         body: formData,
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
         }
     })
     .then(response => response.json())
@@ -190,18 +226,27 @@ function updateBotCardInfo(botId, name, description) {
 
     const nameElement = botCard.querySelector('h2');
     const descriptionElement = botCard.querySelector('p');
-    const editButton = botCard.querySelector('button[onclick*="openEditModal"]');
-    const uploadButton = botCard.querySelector('button[onclick*="openUploadModal"]');
 
     if (nameElement) nameElement.textContent = name;
     if (descriptionElement) descriptionElement.textContent = description || 'No description provided.';
 
+    const editButton = botCard.querySelector('.edit-bot-btn, button[onclick*="openEditModal"]');
     if (editButton) {
-        editButton.setAttribute('onclick', `openEditModal('${botId}', '${escapeHtml(name)}', '${escapeHtml(description || '')}')`);
+        editButton.setAttribute('data-bot-name', escapeHtml(name));
+        editButton.setAttribute('data-bot-description', escapeHtml(description || ''));
+
+        if (editButton.hasAttribute('onclick')) {
+            editButton.setAttribute('onclick', `openEditModal('${botId}', '${escapeHtml(name)}', '${escapeHtml(description || '')}')`);
+        }
     }
 
+    const uploadButton = botCard.querySelector('.upload-pdf-btn, button[onclick*="openUploadModal"]');
     if (uploadButton) {
-        uploadButton.setAttribute('onclick', `openUploadModal('${botId}', '${escapeHtml(name)}')`);
+        uploadButton.setAttribute('data-bot-name', escapeHtml(name));
+
+        if (uploadButton.hasAttribute('onclick')) {
+            uploadButton.setAttribute('onclick', `openUploadModal('${botId}', '${escapeHtml(name)}')`);
+        }
     }
 }
 
@@ -209,7 +254,7 @@ function updateBotAfterPdfUpload(botId) {
     const botCard = document.querySelector(`[data-bot-id="${botId}"]`);
     if (!botCard) return;
 
-    const statusBadge = botCard.querySelector('.inline-flex.items-center.px-2\\.5.py-0\\.5.rounded-full');
+    const statusBadge = botCard.querySelector('.inline-flex.items-center.px-2\\.5');
     if (statusBadge) {
         statusBadge.innerHTML = `
             <svg class="mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
@@ -217,13 +262,11 @@ function updateBotAfterPdfUpload(botId) {
             </svg>
             Ready
         `;
-        statusBadge.classList.remove('bg-yellow-100', 'text-yellow-800', 'dark:bg-yellow-800', 'dark:text-yellow-100');
-        statusBadge.classList.add('bg-green-100', 'text-green-800', 'dark:bg-green-800', 'dark:text-green-100');
+        statusBadge.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100';
     }
 
-    const actionDiv = botCard.querySelector('.flex.items-center.space-x-2');
-    const uploadBtn = actionDiv?.querySelector('button[onclick*="openUploadModal"]');
-    if (uploadBtn && actionDiv) {
+    const uploadBtn = botCard.querySelector('.upload-pdf-btn, button[onclick*="openUploadModal"]');
+    if (uploadBtn) {
         const chatButton = document.createElement('a');
         chatButton.href = `/chats/chat/${botId}/`;
         chatButton.className = 'inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 dark:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 transition-colors duration-200';
@@ -234,7 +277,8 @@ function updateBotAfterPdfUpload(botId) {
             Chat
         `;
 
-        uploadBtn.parentNode.replaceChild(chatButton, uploadBtn);
+        uploadBtn.parentNode.insertBefore(chatButton, uploadBtn);
+        uploadBtn.remove();
     }
 }
 
@@ -260,60 +304,68 @@ function showNotification(message, type = 'info') {
     }, 2000);
 }
 
-function initializeCreateBotFunctionality(){
+function initializeCreateBotFunctionality() {
     const form = document.getElementById('createBotForm');
-    if(!form) return;
+    if (!form) return;
 
-    form.reset()
-    form.addEventListener('submit', function(e){
-       e.preventDefault();
-       createBot(this);
+    form.reset();
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        createBot(this);
     });
 }
 
-function createBot(form){
+function createBot(form) {
     const url = form.action;
     const formData = new FormData(form);
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (csrfToken && !formData.has('csrfmiddlewaretoken')) {
+        formData.append('csrfmiddlewaretoken', csrfToken);
+    }
+
     fetch(url, {
         method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
         },
         body: formData
-    }).then((response)=>{
-        return response.json()
-    }).then((res)=>{
-        if(res.success){
+    }).then((response) => {
+        return response.json();
+    }).then((res) => {
+        if (res.success) {
             const data = res.data;
             const botId = data.id;
             const botName = data.name;
-            const botDescription = data.description? data.description : "No description provided.";
+            const botDescription = data.description ? data.description : "No description provided.";
 
             const botCard = buildBotCard(botId, botName, botDescription);
-            const botList = document.getElementById('bot-container');
+            const botContainer = document.getElementById('bot-container');
 
-            showNotification('Bot created successfully!', 'success');
-            botList.insertAdjacentHTML('beforeend', botCard);
+            if (botContainer) {
+                botContainer.insertAdjacentHTML('beforeend', botCard);
 
-            const emptyStateElement = document.querySelector('.col-span-full:not([data-bot-card])');
-            if (emptyStateElement) {
-                emptyStateElement.remove();
+                const emptyStateElement = document.querySelector('.col-span-full:not([data-bot-card])');
+                if (emptyStateElement) {
+                    emptyStateElement.remove();
+                }
+
+                showNotification('Bot created successfully!', 'success');
+                form.reset();
             }
-
-            form.reset();
-
-            refreshEventListeners();
+        } else {
+            showNotification(res.error || 'Error creating bot', 'error');
         }
-
-    }).catch((error)=>{
+    }).catch((error) => {
+        console.error('Error:', error);
         showNotification('An error occurred while creating the bot.', 'error');
-    })
+    });
 }
-
 
 function buildBotCard(botId, botName, botDescription) {
     return `
-        <div class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden" data-bot-id='${botId}'>
+        <div class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 overflow-hidden" data-bot-id="${botId}">
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex items-center space-x-4">
@@ -349,28 +401,27 @@ function buildBotCard(botId, botName, botDescription) {
                      </span>
                     </div>
                 </div>
-                <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4">
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-900 px-6 py-4">
                 <div class="flex flex-wrap gap-2">
                     <div class="flex items-center space-x-2">
-                            <button type="button"
-                                   class="upload-pdf-btn inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-900 hover:bg-primary-200 dark:hover:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 transition-colors duration-200"
-                                   data-bot-id="${botId}" 
-                                   data-bot-name="${escapeHtml(botName)}">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                                </svg>
-                                Upload PDF
-                            </button>
-                        <form method="post" action="/bots/${botId}/delete/" class="inline delete-bot-form">
-                            <input type="hidden" name="csrfmiddlewaretoken" value="${getCSRFToken()}">
-                            <button type="submit"
-                                    class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-900 transition-colors duration-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                                Delete
-                            </button>
-                        </form>
+                        <button type="button"
+                               class="upload-pdf-btn inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-900 hover:bg-primary-200 dark:hover:bg-primary-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 dark:focus:ring-offset-gray-900 transition-colors duration-200"
+                               data-bot-id="${botId}" 
+                               data-bot-name="${escapeHtml(botName)}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            Upload PDF
+                        </button>
+                        <button type="button"
+                                class="delete-bot-btn inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 dark:focus:ring-offset-gray-900 transition-colors duration-200"
+                                data-bot-id="${botId}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Delete
+                        </button>
                     </div>
                 </div>
             </div>
@@ -378,83 +429,55 @@ function buildBotCard(botId, botName, botDescription) {
     `;
 }
 
-
-
-function getCSRFToken() {
-    return document.querySelector('[name=csrfmiddlewaretoken]').value;
-}
-
-function refreshEventListeners() {
-    const deleteForms = document.querySelectorAll('form.delete-bot-form:not([data-initialized])');
-    deleteForms.forEach(form => {
-        form.setAttribute('data-initialized', 'true');
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            deleteBot(this);
-        });
-    });
-
-    const editButtons = document.querySelectorAll('button.edit-bot-btn:not([data-initialized])');
-    editButtons.forEach(button => {
-        button.setAttribute('data-initialized', 'true');
-        button.addEventListener('click', function() {
-            const botId = this.getAttribute('data-bot-id');
-            const botName = this.getAttribute('data-bot-name');
-            const botDescription = this.getAttribute('data-bot-description');
-            openEditModal(botId, botName, botDescription);
-        });
-    });
-
-    const uploadButtons = document.querySelectorAll('button.upload-pdf-btn:not([data-initialized])');
-    uploadButtons.forEach(button => {
-        button.setAttribute('data-initialized', 'true');
-        button.addEventListener('click', function() {
-            const botId = this.getAttribute('data-bot-id');
-            const botName = this.getAttribute('data-bot-name');
-            openUploadModal(botId, botName);
-        });
-    });
-
-    const filterInput = document.getElementById('filter-bots');
-    if (filterInput && filterInput.value) {
-        filterInput.dispatchEvent(new Event('input'));
-    }
-}
-
-
 function initializeDeleteFunctionality() {
-    const deleteForms = document.querySelectorAll('form[action*="/delete/"]');
-
-    deleteForms.forEach(form => {
-        form.setAttribute('data-initialized', 'true');
-        form.addEventListener('submit', function(e) {
+    document.addEventListener('click', function(e) {
+        const deleteButton = e.target.closest('.delete-bot-btn, form[action*="/delete/"] button[type="submit"]');
+        if (deleteButton) {
             e.preventDefault();
-            deleteBot(this);
-        });
+
+            let botId;
+            if (deleteButton.hasAttribute('data-bot-id')) {
+                botId = deleteButton.getAttribute('data-bot-id');
+            } else {
+                const form = deleteButton.closest('form[action*="/delete/"]');
+                if (form) {
+                    const actionUrl = form.action;
+                    botId = actionUrl.split('/').filter(part => part).slice(-2, -1)[0];
+                }
+            }
+
+            if (botId) {
+                deleteBot(botId);
+            }
+        }
     });
 }
 
-
-function deleteBot(form) {
-    
+function deleteBot(botId) {
     if (!confirm('Are you sure you want to delete this bot?')) {
         return;
     }
 
-    const url = form.action;
-    const formData = new FormData(form);
+    const url = `/bots/${botId}/delete/`;
+    const formData = new FormData();
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (csrfToken) {
+        formData.append('csrfmiddlewaretoken', csrfToken);
+    }
 
     fetch(url, {
         method: 'POST',
         body: formData,
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
         }
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            const botCard = form.closest('[data-bot-id]');
+            const botCard = document.querySelector(`[data-bot-id="${botId}"]`);
             if (botCard) {
                 botCard.remove();
                 showNotification('Bot deleted successfully!', 'success');
@@ -472,14 +495,12 @@ function deleteBot(form) {
     });
 }
 
-
-
-function escapeHtml(unsafe) {
-    if (!unsafe) return '';
-    return unsafe
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
